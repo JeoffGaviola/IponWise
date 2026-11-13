@@ -1,0 +1,508 @@
+body {
+  background: var(--color-bg);
+}
+
+.panel,
+.stat,
+.goal-card,
+.wallet,
+.legal-card,
+.menu,
+.modal,
+.toast,
+.account-trigger,
+.getstarted,
+.gs-step,
+.idea-card,
+.fund-check,
+.found-card,
+.scan-view {
+  border: 1px solid transparent;
+  background: var(--color-surface);
+  box-shadow: var(--nm-raised);
+}
+
+.panel {
+  border-radius: var(--nm-radius);
+  padding: var(--space-6);
+}
+
+.stat,
+.goal-card,
+.wallet {
+  border-radius: var(--nm-radius);
+}
+
+.goal-card {
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.stat:hover,
+.goal-card:hover,
+.wallet:hover {
+  transform: none;
+  box-shadow: var(--nm-raised), 0 0 0 1px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.modal {
+  border-radius: 28px;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-backdrop {
+  background: color-mix(in srgb, var(--color-bg) 62%, rgb(30 40 60 / 0.55));
+  backdrop-filter: blur(6px);
+}
+
+.menu {
+  border-radius: var(--nm-radius-md);
+  box-shadow: var(--nm-raised-sm);
+}
+
+.menu button:hover:not(:disabled) {
+  background: transparent;
+  box-shadow: var(--nm-inset-sm);
+}
+
+.toast {
+  border-radius: var(--nm-radius-md);
+  border-left-width: 5px;
+  box-shadow: var(--nm-raised-sm);
+}
+
+.toast-success {
+  background: var(--color-surface);
+}
+
+.toast-error {
+  background: var(--color-surface);
+}
+
+.toast-warning {
+  background: var(--color-surface);
+}
+
+.toast-info {
+  background: var(--color-surface);
+}
+
+.stat-icon,
+.goal-icon,
+.wallet-icon,
+.tx-icon,
+.reminder-icon,
+.empty-icon,
+.confirm-icon,
+.goal-icon-well {
+  background: var(--color-surface) !important;
+  box-shadow: var(--nm-inset-sm);
+  border-radius: 14px;
+}
+
+.stat-primary .stat-icon,
+.stat-info .stat-icon,
+.goal-icon,
+.wallet-icon {
+  color: var(--color-link);
+}
+
+.stat-success .stat-icon,
+.tx-icon-inflow {
+  color: var(--color-success-text);
+}
+
+.empty-icon-error,
+.confirm-icon-danger {
+  color: var(--color-error-text);
+}
+
+.progress,
+.meter {
+  background: var(--color-surface);
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm);
+  height: 12px;
+}
+
+.meter {
+  height: 10px;
+}
+
+.progress-fill {
+  box-shadow: 1px 1px 3px color-mix(in srgb, var(--nm-dark) 70%, transparent);
+}
+
+.result-card {
+  background: var(--color-surface);
+  border-color: transparent;
+  border-radius: var(--nm-radius-md);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-2) 25%,
+    color-mix(in srgb, var(--nm-light) 40%, var(--color-surface-2)) 37%,
+    var(--color-surface-2) 63%
+  );
+  background-size: 400% 100%;
+  border-radius: 10px;
+}
+
+.btn {
+  border-radius: var(--nm-radius-sm);
+  border-color: transparent;
+  transition: box-shadow var(--dur-2) var(--ease), transform var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+}
+
+.btn-secondary,
+.btn-ghost {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--nm-raised-xs);
+  border-color: transparent;
+}
+
+.btn-ghost {
+  color: var(--color-link);
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface);
+  box-shadow: var(--nm-raised-sm);
+}
+
+.btn-secondary:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  box-shadow: var(--nm-inset-sm);
+  transform: none;
+}
+
+.btn-primary,
+.btn-success,
+.btn-warning,
+.btn-info,
+.btn-danger {
+  box-shadow: 4px 4px 10px var(--nm-dark), -3px -3px 8px var(--nm-light), inset 0 1px 0 rgb(255 255 255 / 0.22);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-success:hover:not(:disabled),
+.btn-warning:hover:not(:disabled),
+.btn-info:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  box-shadow: 6px 6px 14px var(--nm-dark), -4px -4px 10px var(--nm-light), inset 0 1px 0 rgb(255 255 255 / 0.22);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-success:active:not(:disabled),
+.btn-warning:active:not(:disabled),
+.btn-info:active:not(:disabled),
+.btn-danger:active:not(:disabled) {
+  box-shadow: inset 3px 3px 7px rgb(0 0 0 / 0.28), inset -2px -2px 5px rgb(255 255 255 / 0.12);
+  transform: none;
+}
+
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.nav-item:focus-visible,
+.seg:focus-visible {
+  outline: none;
+  box-shadow: var(--nm-raised-xs), var(--focus-ring);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  background: var(--color-surface);
+  color: var(--color-disabled-text);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.icon-btn {
+  border-radius: 12px;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--color-surface);
+  box-shadow: var(--nm-raised-xs);
+}
+
+.icon-btn:active:not(:disabled) {
+  box-shadow: var(--nm-inset-sm);
+}
+
+.icon-btn-danger:hover:not(:disabled),
+.icon-btn-warning:hover:not(:disabled),
+.icon-btn-info:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+.control {
+  border-color: transparent;
+  border-radius: var(--nm-radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+  min-height: 46px;
+}
+
+.control:hover:not(:disabled):not([readonly]) {
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm), 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.control:focus {
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm), var(--focus-ring);
+}
+
+.control[readonly],
+.control:disabled {
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+  opacity: 0.85;
+}
+
+.control-error,
+.control[aria-invalid='true'] {
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm), 0 0 0 2px var(--color-error);
+}
+
+select.control {
+  padding-right: 2rem;
+}
+
+.search-wrap .control {
+  border-radius: var(--radius-full);
+}
+
+.segmented {
+  background: var(--color-surface);
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm);
+  border-radius: 14px;
+}
+
+.seg {
+  border-radius: 11px;
+}
+
+.seg[aria-pressed='true'] {
+  background: var(--color-surface);
+  box-shadow: var(--nm-raised-xs);
+  color: var(--color-link);
+  border-color: transparent;
+}
+
+.seg-inflow[aria-pressed='true'] {
+  color: var(--color-success-text);
+  border-color: transparent;
+}
+
+.seg-outflow[aria-pressed='true'] {
+  color: var(--color-text-primary);
+  border-color: transparent;
+}
+
+.switch {
+  background: var(--color-surface);
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm);
+}
+
+.switch i {
+  background: var(--color-surface);
+  box-shadow: var(--nm-raised-xs);
+}
+
+.switch-on {
+  background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
+}
+
+.switch-on i {
+  background: var(--color-primary);
+  box-shadow: 2px 2px 5px var(--nm-dark);
+}
+
+.alert,
+.insight {
+  border-color: transparent;
+  border-radius: var(--nm-radius-md);
+  box-shadow: var(--nm-raised-xs);
+  border-left: 4px solid currentColor;
+}
+
+.badge {
+  border-color: transparent;
+  box-shadow: var(--nm-inset-sm);
+  background: var(--color-surface);
+}
+
+.badge-neutral {
+  color: var(--color-neutral-text);
+}
+
+.badge-success {
+  color: var(--color-success-text);
+}
+
+.badge-error {
+  color: var(--color-error-text);
+}
+
+.badge-warning {
+  color: var(--color-warning-text);
+}
+
+.badge-info {
+  color: var(--color-info-text);
+}
+
+.helper {
+  border-color: transparent;
+  border-radius: var(--nm-radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.plan-preview {
+  border-radius: var(--nm-radius-md);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.sidebar {
+  background: var(--color-surface);
+  border-right: 0;
+  box-shadow: 10px 0 26px color-mix(in srgb, var(--nm-dark) 55%, transparent);
+}
+
+.nav-item {
+  border-radius: var(--nm-radius-sm);
+}
+
+.nav-item:hover {
+  background: transparent;
+  box-shadow: var(--nm-raised-xs);
+}
+
+.nav-active,
+.nav-active:hover {
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+  color: var(--color-link);
+}
+
+.nav-item::before {
+  display: none;
+}
+
+.topbar {
+  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  border-bottom: 0;
+  box-shadow: 0 8px 18px -12px var(--nm-dark);
+}
+
+.account-trigger {
+  box-shadow: var(--nm-raised-xs);
+}
+
+.account-trigger:hover {
+  border-color: transparent;
+  box-shadow: var(--nm-raised-sm);
+}
+
+.avatar {
+  box-shadow: 2px 2px 6px var(--nm-dark), -2px -2px 5px var(--nm-light);
+}
+
+.brand-mark {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--nm-raised-xs);
+  border-radius: 14px;
+}
+
+.tx {
+  border-bottom-color: color-mix(in srgb, var(--nm-dark) 40%, transparent);
+}
+
+.setting-row {
+  border-top-color: color-mix(in srgb, var(--nm-dark) 40%, transparent);
+}
+
+.modal-actions {
+  border-top-color: color-mix(in srgb, var(--nm-dark) 35%, transparent);
+}
+
+.strength-bars i {
+  height: 7px;
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.splash {
+  background: var(--color-bg);
+}
+
+.splash-mark {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--nm-raised);
+}
+
+.splash-ring {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.splash-leave .splash-mark {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  box-shadow: var(--nm-raised);
+}
+
+.splash-bar {
+  background: var(--color-surface);
+  box-shadow: var(--nm-inset-sm);
+  height: 8px;
+  width: 200px;
+}
+
+.splash-bar i {
+  box-shadow: 1px 1px 3px var(--nm-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .nav-item,
+  .stat,
+  .wallet,
+  .goal-card {
+    transition: none;
+  }
+}
+
+/* Windows high-contrast / forced colours: shadows disappear, so give surfaces real borders back. */
+@media (forced-colors: active) {
+  .panel,
+  .stat,
+  .goal-card,
+  .wallet,
+  .modal,
+  .toast,
+  .control,
+  .btn {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+}
+
+/* On the dark illustration the logo tile must stay clearly visible. */
+.brand-light .brand-mark {
+  background: rgb(255 255 255 / 0.94);
+  color: #0f4c5c;
+  box-shadow: 0 6px 16px rgb(8 40 54 / 0.35);
+}

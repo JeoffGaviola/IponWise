@@ -1,0 +1,510 @@
+/* ============================================================
+   AUTH — LAYOUT
+   ============================================================ */
+.auth {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden;
+  background: #123e52;
+}
+
+/* ============================================================
+   AUTH — VISUAL / SCENE
+   ============================================================ */
+.auth-visual {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #123e52;
+}
+
+.auth-scene {
+  position: absolute;
+  inset: 0;
+}
+
+.scene-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.scene-wide {
+  display: none;
+}
+
+.auth-visual-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 5vh, 44px);
+  padding: clamp(24px, 3.4vw, 48px);
+  pointer-events: none;
+}
+
+.auth-visual-text {
+  display: grid;
+  gap: 6px;
+  max-width: min(460px, calc(50vw - 520px));
+  color: #fff;
+  text-shadow: 0 2px 18px rgb(8 40 54 / 0.45);
+}
+
+.auth-visual-text h2 {
+  max-width: 11em;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 1.1rem + 1.7vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.auth-visual-text p {
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.2rem);
+  font-weight: 600;
+  color: #ffe3a3;
+}
+
+.auth-visual-text small {
+  font-size: 0.82rem;
+  opacity: 0.88;
+}
+
+/* ============================================================
+   AUTH — PANEL
+   ============================================================ */
+.auth-panel {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: min(100%, 440px);
+  margin: clamp(24px, 5vh, 56px) 24px;
+  padding: clamp(24px, 3.2vw, 36px);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgb(245 250 252 / 0.72), rgb(224 237 242 / 0.56));
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  backdrop-filter: blur(22px) saturate(1.35);
+  box-shadow:
+    0 28px 70px rgb(8 40 54 / 0.38),
+    inset 0 1px 0 rgb(255 255 255 / 0.82),
+    inset 0 -1px 0 rgb(255 255 255 / 0.18);
+}
+
+.auth-panel-inner {
+  width: 100%;
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* ============================================================
+   AUTH — FORM
+   ============================================================ */
+.auth-form-enter {
+  display: grid;
+  gap: var(--space-4);
+  animation: fade-in var(--dur-3) var(--ease) both;
+}
+
+.auth-intro {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-intro h1 {
+  font-size: clamp(1.7rem, 1.35rem + 1vw, 2.1rem);
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.auth-intro > p {
+  font-size: 0.95rem;
+  max-width: 40ch;
+}
+
+.auth-form {
+  gap: var(--space-4);
+}
+
+.auth-form .field {
+  gap: 8px;
+}
+
+.auth-form .control {
+  min-height: 48px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.7);
+  border: 1px solid rgb(15 27 51 / 0.18);
+  box-shadow: none;
+}
+
+.auth-form .btn-lg {
+  border-radius: 12px;
+}
+
+.auth-form .btn-content {
+  justify-content: center;
+}
+
+.auth-form .btn-loading .btn-content,
+.btn-social.btn-loading .btn-content {
+  visibility: hidden;
+}
+
+/* ============================================================
+   AUTH — SOCIAL
+   ============================================================ */
+.social-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.btn-social {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: none;
+}
+
+.btn-social .btn-content {
+  gap: 12px;
+  justify-content: center;
+}
+
+.auth-legal,
+.divider {
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   AUTH — DIVIDER
+   ============================================================ */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.82rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ============================================================
+   AUTH — PASSWORD STRENGTH
+   ============================================================ */
+.strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.strength-bars {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.strength-bars i {
+  width: 30px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-border);
+  transition: background-color var(--dur-2) var(--ease);
+}
+
+.strength-1 .strength-bars i:nth-child(-n + 1) {
+  background: var(--color-error);
+}
+
+.strength-2 .strength-bars i:nth-child(-n + 2) {
+  background: var(--color-warning);
+}
+
+.strength-3 .strength-bars i:nth-child(-n + 3) {
+  background: var(--color-info);
+}
+
+.strength-4 .strength-bars i:nth-child(-n + 4) {
+  background: var(--color-success);
+}
+
+/* ============================================================
+   AUTH — SWITCH / PROGRESS / LEGAL / BACK
+   ============================================================ */
+.auth-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.auth-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.auth-progress .spin {
+  color: var(--color-primary);
+}
+
+.auth-legal {
+  text-align: center;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.auth-legal a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.back-link {
+  justify-self: start;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--color-link);
+  font-weight: 650;
+  min-height: 40px;
+}
+
+/* ============================================================
+   AUTH — SCENE ANIMATIONS
+   ============================================================ */
+.scene-sun {
+  animation: sun-rise 2.2s var(--ease) both;
+  transform-box: fill-box;
+}
+
+.scene-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sway 5.5s ease-in-out infinite alternate;
+}
+
+.scene-cloud {
+  animation: drift 38s ease-in-out infinite alternate;
+}
+
+.scene-chip {
+  animation: chip-float 7s ease-in-out infinite alternate;
+}
+
+.scene-coin-drop {
+  animation: coin-drop 3.4s ease-in infinite;
+}
+
+.scene-spark {
+  animation: spark 4.5s ease-in-out infinite;
+}
+
+.scene-spark.s2 {
+  animation-delay: -1.5s;
+}
+
+.scene-spark.s3 {
+  animation-delay: -3s;
+}
+
+@keyframes sun-rise {
+  from {
+    transform: translateY(90px);
+    opacity: 0.2;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(-2.5deg);
+  }
+  to {
+    transform: rotate(2.5deg);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(-14px);
+  }
+  to {
+    transform: translateX(18px);
+  }
+}
+
+@keyframes chip-float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes coin-drop {
+  0% {
+    transform: translate(14px, -26px);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-12px, 18px);
+    opacity: 1;
+  }
+  85%,
+  100% {
+    transform: translate(-16px, 30px);
+    opacity: 0;
+  }
+}
+
+@keyframes spark {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-60px);
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   AUTH — RESPONSIVE
+   ============================================================ */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .scene-tall {
+    display: none;
+  }
+
+  .scene-wide {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .auth-panel {
+    position: relative;
+    width: min(420px, calc(100vw - 48px));
+    max-height: none;
+    margin: clamp(24px, 5vh, 56px) 24px;
+    padding: 28px;
+    overflow: visible;
+    transform: none;
+  }
+}
+
+@media (max-width: 1279px), (orientation: portrait) {
+  .auth-visual-text {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .auth-panel {
+    margin-inline: 16px;
+    padding: var(--space-4);
+  }
+
+  .auth-form-enter,
+  .auth-panel-inner {
+    gap: var(--space-3);
+  }
+
+  .scene-chip {
+    display: none;
+  }
+
+  .auth-intro h1 {
+    font-size: 1.6rem;
+  }
+
+  .auth-legal {
+    font-size: 0.72rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 700px) {
+  .auth-panel {
+    margin-block: 24px;
+  }
+
+  .auth-visual-text small {
+    display: none;
+  }
+}
+
+/* ============================================================
+   AUTH — DARK THEME / TRANSPARENCY FALLBACKS
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .scene-sun,
+  .scene-sway,
+  .scene-cloud,
+  .scene-chip,
+  .scene-coin-drop,
+  .scene-spark {
+    animation: none !important;
+  }
+
+  .scene-coin-drop,
+  .scene-spark {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .auth-panel {
+    background: rgb(255 255 255 / 0.96);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  .auth-panel {
+    background: rgb(255 255 255 / 0.96);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .auth-panel {
+    background: rgb(20 28 42 / 0.82);
+    border-color: rgb(255 255 255 / 0.18);
+  }
+}
+
+[data-theme='dark'] .auth-panel {
+  background: rgb(20 28 42 / 0.82);
+  border-color: rgb(255 255 255 / 0.18);
+}
