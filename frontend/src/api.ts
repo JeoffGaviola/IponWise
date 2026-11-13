@@ -1,6 +1,9 @@
 import { ApiError, NETWORK_MESSAGE, SESSION_EXPIRED_MESSAGE, parseDetail } from './lib/errors.ts';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL
+  || (import.meta.env.PROD ? '' : 'http://localhost:8000')
+).replace(/\/$/, '');
 const DEFAULT_TIMEOUT_MS = 15000;
 const UPLOAD_TIMEOUT_MS = 45000;
 
