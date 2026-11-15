@@ -41,6 +41,80 @@ export function passwordStrength(password: string): { score: number; label: stri
   return { score, label: ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'][score] };
 }
 
+export function PasswordRecoveryPage({ onComplete }: { onComplete: () => void }) {
+  const toast = useToast();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const strength = passwordStrength(password);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (busy) return;
+    if (password.length < 8) {
+      setError('Use at least 8 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('The passwords don’t match.');
+      return;
+    }
+    if (!supabase) {
+      toast.error('Password recovery isn’t configured for this build.', { title: 'Not configured', key: 'not-configured' });
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+      await supabase.auth.signOut();
+      toast.success('Your password has been updated. Sign in with your new password.', { title: 'Password updated', duration: 9000 });
+      onComplete();
+    } catch (updateError) {
+      toast.error(friendlyAuthError(updateError, 'reset'), { title: 'Couldn’t update password', key: 'auth:recovery' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <main className="auth">
+    <aside className="auth-visual">
+      <AuthScene />
+      <div className="auth-visual-copy">
+        <Brand tone="light" />
+        <div className="auth-visual-text">
+          <h2>Every peso has a purpose.</h2>
+          <p>Ipon today, ginhawa tomorrow.</p>
+          <small>Ipon means saving. Ginhawa means comfort and peace of mind.</small>
+        </div>
+      </div>
+    </aside>
+    <section className="auth-panel" aria-labelledby="auth-recovery-heading">
+      <div className="auth-panel-inner">
+        <div className="auth-form-enter">
+          <div className="auth-intro">
+            <h1 id="auth-recovery-heading">Create a new password</h1>
+            <p className="muted">Choose a new password to secure your IponWise account.</p>
+          </div>
+          <form className="stack auth-form" noValidate onSubmit={submit} aria-busy={busy}>
+            <Field label="New password" error={error && password.length < 8 ? error : undefined} hint="Use at least 8 characters. A mix of letters, numbers and symbols is stronger.">
+              <PasswordInput className="control" value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Create a strong password" />
+            </Field>
+            {password && <div className={`strength strength-${strength.score}`} role="status" aria-live="polite"><span className="strength-bars" aria-hidden="true"><i /><i /><i /><i /></span><span>Password strength: <strong>{strength.label}</strong></span></div>}
+            <Field label="Confirm new password" error={error && password.length >= 8 && password !== confirm ? error : undefined}>
+              <PasswordInput className="control" value={confirm} onChange={(event) => { setConfirm(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Type your password again" />
+            </Field>
+            <Button type="submit" size="lg" loading={busy} disabled={busy} icon={LockKeyhole}>Update password<ArrowRight size={16} aria-hidden="true" /></Button>
+          </form>
+          {busy && <p className="auth-progress" role="status" aria-live="polite"><Spinner size={15} /> Updating your password securely…</p>}
+        </div>
+      </div>
+    </section>
+  </main>;
+}
+
 export default function AuthPage() {
   const toast = useToast();
   const [mode, setMode] = useState<AuthMode>('login');
@@ -177,6 +251,8 @@ export default function AuthPage() {
           </div>
 
           {!isSupabaseConfigured && <FormAlert tone="warning">Sign-in isn’t configured for this build, so account actions will not work yet. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in <code>frontend/.env.local</code>.</FormAlert>}
+
+          {mode === 'forgot' && <p className="auth-recovery-provider">Using Facebook to sign in? <a href="https://www.facebook.com/login/identify/" target="_blank" rel="noreferrer">Recover your Facebook account</a> on Facebook.</p>}
 
           {mode !== 'forgot' && <>
             <div className="social-stack" role="group" aria-label="Continue with a social account">

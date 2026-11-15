@@ -12,7 +12,7 @@ import { NotificationCenter, type AppNotification } from './components/Notificat
 import { SPLASH_MS } from './lib/splash.ts';
 import { Avatar } from './AvatarManager.tsx';
 import LegalPage from './LegalPage.tsx';
-import AuthPage from './pages/AuthPage.tsx';
+import AuthPage, { PasswordRecoveryPage } from './pages/AuthPage.tsx';
 import Overview from './pages/Overview.tsx';
 import Goals from './pages/Goals.tsx';
 import Transactions from './pages/Transactions.tsx';
@@ -271,6 +271,7 @@ const cameBackFromProvider = () => /access_token=|[?&#]code=/.test(`${window.loc
 
 function Root() {
   const [session, setSession] = useState<any>(null);
+  const [recoveringPassword, setRecoveringPassword] = useState(false);
   const [ready, setReady] = useState(!isSupabaseConfigured || !supabase);
   const [shellReady, setShellReady] = useState(false);
   const [splash, setSplash] = useState<{ mode: SplashMode; since: number } | null>(() => (isSupabaseConfigured && supabase ? { mode: cameBackFromProvider() ? 'enter' : 'open', since: Date.now() } : null));
@@ -284,6 +285,8 @@ function Root() {
       if (!active) return;
       const previous = sessionRef.current;
       sessionRef.current = next;
+      if (event === 'PASSWORD_RECOVERY') setRecoveringPassword(true);
+      if (event === 'SIGNED_OUT') setRecoveringPassword(false);
       // Do not show the entry transition for token refreshes.
       if (!previous && next && event === 'SIGNED_IN') { setShellReady(false); setSplash((current) => (current?.mode === 'enter' ? current : { mode: 'enter', since: Date.now() })); }
       if (!next) setShellReady(false);
@@ -310,6 +313,7 @@ function Root() {
 
   const overlay = splash ? <SessionSplash mode={splash.mode} /> : null;
   if (!ready) return overlay || <div className="app-loading"><Brand /><LoadingBlock label="Opening IponWise…" rows={2} /></div>;
+  if (recoveringPassword && session) return <><PasswordRecoveryPage onComplete={() => setRecoveringPassword(false)} />{overlay}</>;
   // Changing accounts remounts the shell to clear account-specific UI state.
   if (isSuperadminPath && session && !(splash?.mode === 'leave' && !sessionRef.current)) return <>{<SuperadminPortal session={session} onSignOut={signOutPortal} />}{overlay}</>;
   return <>

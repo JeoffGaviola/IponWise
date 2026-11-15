@@ -183,6 +183,18 @@
   color: var(--color-text-secondary);
 }
 
+.auth-recovery-provider {
+  margin-top: -8px;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.auth-recovery-provider a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
 /* ============================================================
    AUTH — DIVIDER
    ============================================================ */
