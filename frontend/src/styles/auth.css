@@ -83,9 +83,12 @@
   z-index: 2;
   display: grid;
   place-items: center;
-  width: min(100%, 440px);
+  width: min(494px, calc(100vw - 48px));
+  max-height: calc(100svh - 48px);
   margin: clamp(24px, 5vh, 56px) 24px;
   padding: clamp(24px, 3.2vw, 36px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   border: 1px solid rgb(255 255 255 / 0.7);
   border-radius: 24px;
   background: linear-gradient(135deg, rgb(245 250 252 / 0.72), rgb(224 237 242 / 0.56));
@@ -427,11 +430,10 @@
 @media (min-width: 768px) {
   .auth-panel {
     position: relative;
-    width: min(420px, calc(100vw - 48px));
-    max-height: none;
+    width: min(494px, calc(100vw - 48px));
+    max-height: calc(100svh - 48px);
     margin: clamp(24px, 5vh, 56px) 24px;
     padding: 28px;
-    overflow: visible;
     transform: none;
   }
 }
