@@ -80,6 +80,39 @@
   justify-content: flex-start;
 }
 
+.budget-cash-flow,
+.forecast-summary {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.forecast-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.forecast-summary > div {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-4);
+  border-radius: var(--nm-radius-md);
+  background: var(--color-surface-2);
+  box-shadow: var(--nm-inset-sm);
+}
+
+.forecast-summary svg {
+  color: var(--color-link);
+}
+
+.forecast-summary strong {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 639px) {
+  .forecast-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ============================================================
    GET STARTED
    ============================================================ */

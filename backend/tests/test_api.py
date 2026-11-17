@@ -1,10 +1,12 @@
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 import pytest
+from datetime import date
 
 from app.main import app
 from app.schemas import GoalCreate, TransactionCreate, WalletCreate
 from app.ledger import next_goal_saved, validate_withdrawal
+from app.cashflow import add_months, occurrence_dates
 from decimal import Decimal
 
 client = TestClient(app)
@@ -88,6 +90,13 @@ def test_wallet_rejects_negative_balance():
 def test_wallet_kind_is_restricted_to_supported_account_types():
     with pytest.raises(ValidationError):
         WalletCreate(name='Daily funds', provider='GCash', kind='unknown', balance=100)
+
+
+def test_recurring_month_end_dates_do_not_drift():
+    assert add_months(date(2024, 1, 31), 1).isoformat() == '2024-02-29'
+    assert add_months(date(2024, 1, 31), 2).isoformat() == '2024-03-31'
+    dates = occurrence_dates(date(2024, 1, 31), None, 'monthly', date(2024, 4, 30))
+    assert [item.isoformat() for item in dates] == ['2024-01-31', '2024-02-29', '2024-03-31', '2024-04-30']
 
 
 def test_next_goal_saved_raises_instead_of_clamping_negative():

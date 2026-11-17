@@ -107,6 +107,60 @@ class TransactionUpdate(ApiModel):
     goal_id: UUID | None = Field(default=None, alias="goalId")
 
 
+BudgetFrequency = Literal["weekly", "biweekly", "monthly", "yearly"]
+OccurrenceStatus = Literal["pending", "posted", "skipped"]
+
+
+class BudgetCreate(ApiModel):
+    month: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    category: str = Field(min_length=1, max_length=80)
+    limit_amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2, alias="limitAmount")
+
+
+class BudgetUpdate(ApiModel):
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    limit_amount: Decimal | None = Field(default=None, gt=0, max_digits=14, decimal_places=2, alias="limitAmount")
+
+
+class RecurringRuleCreate(ApiModel):
+    name: str = Field(min_length=2, max_length=120)
+    type: Literal["deposit", "withdrawal"]
+    category: str = Field(min_length=1, max_length=80)
+    amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+    description: str = Field(default="", max_length=500)
+    frequency: BudgetFrequency
+    start_date: DateType = Field(alias="startDate")
+    end_date: DateType | None = Field(default=None, alias="endDate")
+    active: bool = True
+    goal_id: UUID | None = Field(default=None, alias="goalId")
+
+    @model_validator(mode="after")
+    def valid_dates(self):
+        if self.end_date and self.end_date < self.start_date:
+            raise ValueError("End date cannot be before the start date.")
+        return self
+
+
+class RecurringRuleUpdate(ApiModel):
+    name: str | None = Field(default=None, min_length=2, max_length=120)
+    type: Literal["deposit", "withdrawal"] | None = None
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    amount: Decimal | None = Field(default=None, gt=0, max_digits=14, decimal_places=2)
+    description: str | None = Field(default=None, max_length=500)
+    frequency: BudgetFrequency | None = None
+    start_date: DateType | None = Field(default=None, alias="startDate")
+    end_date: DateType | None = Field(default=None, alias="endDate")
+    active: bool | None = None
+    goal_id: UUID | None = Field(default=None, alias="goalId")
+
+
+class CashFlowSimulation(ApiModel):
+    purchase_amount: Decimal = Field(default=Decimal("0"), ge=0, max_digits=14, decimal_places=2, alias="purchaseAmount")
+    purchase_date: DateType | None = Field(default=None, alias="purchaseDate")
+    additional_deposit: Decimal = Field(default=Decimal("0"), ge=0, max_digits=14, decimal_places=2, alias="additionalDeposit")
+    deposit_date: DateType | None = Field(default=None, alias="depositDate")
+
+
 WalletKind = Literal["ewallet", "bank", "atm", "cash", "investment"]
 WalletSource = Literal["manual", "qr", "card"]
 CardNetwork = Literal["visa", "mastercard", "amex", "jcb", "unionpay", "discover", "other"]

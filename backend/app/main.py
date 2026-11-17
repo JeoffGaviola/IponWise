@@ -3,6 +3,7 @@
 import os
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -34,6 +35,7 @@ from .account_helpers import (
     _ledger_balance,
     _validate_withdrawal,
 )
+from .cashflow import forecast_balance, occurrence_dates
 from .ledger import lock_user_ledger, resolve_today
 from .auth import close_auth_client, get_current_user, init_auth_client
 from .avatars import router as avatar_router
@@ -41,6 +43,11 @@ from .db import engine, get_db
 from .schemas import (
     GoalCreate,
     GoalUpdate,
+    BudgetCreate,
+    BudgetUpdate,
+    CashFlowSimulation,
+    RecurringRuleCreate,
+    RecurringRuleUpdate,
     ProfileUpdate,
     ReminderCreate,
     ReminderUpdate,
@@ -378,6 +385,192 @@ def update_profile(
         ) from exc
 
     return get_profile(user, db)
+
+
+
+# Budget and deterministic cash-flow routes
+@app.get("/api/budgets")
+def list_budgets(
+        month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
+        user: dict[str, Any] = Depends(get_current_user),
+        db: Session = Depends(get_db),
+) -> dict[str, Any]:
+        selected = month or date.today().strftime("%Y-%m")
+        rows = _fetch_all(db, """
+            SELECT b.*, coalesce(sum(t.amount) filter (where t.transaction_type = 'withdrawal'), 0) AS actual_amount
+            FROM public.monthly_budgets b
+            LEFT JOIN public.savings_transactions t
+              ON t.user_id = b.user_id
+             AND t.category = b.category
+             AND t.transaction_type = 'withdrawal'
+             AND to_char(t.transaction_date, 'YYYY-MM') = to_char(b.budget_month, 'YYYY-MM')
+            WHERE b.user_id = :user_id AND to_char(b.budget_month, 'YYYY-MM') = :month
+            GROUP BY b.id
+            ORDER BY b.category
+        """, {"user_id": UUID(user["id"]), "month": selected})
+        return {"month": selected, "budgets": [
+            {
+                "id": str(row["id"]), "month": row["budget_month"].strftime("%Y-%m"),
+                "category": row["category"], "limitAmount": row["limit_amount"],
+                "actualAmount": row["actual_amount"],
+                "remainingAmount": row["limit_amount"] - row["actual_amount"],
+                "usagePercent": (row["actual_amount"] / row["limit_amount"] * 100) if row["limit_amount"] else Decimal("0"),
+            } for row in rows
+        ]}
+
+
+@app.post("/api/budgets", status_code=status.HTTP_201_CREATED)
+def create_budget(payload: BudgetCreate, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        month = date.fromisoformat(f"{payload.month}-01")
+        try:
+            row = db.execute(text("""
+                INSERT INTO public.monthly_budgets (user_id, budget_month, category, limit_amount)
+                VALUES (:user_id, :month, :category, :limit_amount)
+                RETURNING *
+            """), {"user_id": UUID(user["id"]), "month": month, "category": payload.category.strip(), "limit_amount": payload.limit_amount}).mappings().one()
+            db.commit()
+            return {"id": str(row["id"]), "month": payload.month, "category": row["category"], "limitAmount": row["limit_amount"], "actualAmount": Decimal("0"), "remainingAmount": row["limit_amount"], "usagePercent": Decimal("0")}
+        except IntegrityError as exc:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="A budget for this category and month already exists.") from exc
+
+
+@app.patch("/api/budgets/{budget_id}")
+def update_budget(budget_id: UUID, payload: BudgetUpdate, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        updates = payload.model_dump(exclude_unset=True, by_alias=False)
+        if "limit_amount" in updates:
+            updates["limit_amount"] = updates.pop("limit_amount")
+        if "category" in updates:
+            updates["category"] = updates["category"].strip()
+        if not updates:
+            raise HTTPException(status_code=422, detail="At least one budget field is required.")
+        setters = ", ".join(f"{key} = :{key}" for key in updates)
+        try:
+            row = db.execute(text(f"""
+                UPDATE public.monthly_budgets SET {setters}, updated_at = now()
+                WHERE id = :id AND user_id = :user_id RETURNING *
+            """), {**updates, "id": budget_id, "user_id": UUID(user["id"])}).mappings().first()
+            if row is None:
+                raise HTTPException(status_code=404, detail="Budget not found.")
+            db.commit()
+            return {"id": str(row["id"]), "month": row["budget_month"].strftime("%Y-%m"), "category": row["category"], "limitAmount": row["limit_amount"]}
+        except IntegrityError as exc:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="A budget for this category and month already exists.") from exc
+
+
+@app.delete("/api/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_budget(budget_id: UUID, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
+        result = db.execute(text("DELETE FROM public.monthly_budgets WHERE id = :id AND user_id = :user_id"), {"id": budget_id, "user_id": UUID(user["id"])})
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Budget not found.")
+        db.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _rule_response(row: Any) -> dict[str, Any]:
+        return {
+            "id": str(row["id"]), "name": row["name"], "type": row["transaction_type"], "category": row["category"],
+            "amount": row["amount"], "description": row["description"], "frequency": row["frequency"],
+            "startDate": row["start_date"], "endDate": row["end_date"], "active": row["is_active"], "goalId": _id_str(row["goal_id"]),
+        }
+
+
+@app.get("/api/recurring-rules")
+def list_recurring_rules(user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+        rows = _fetch_all(db, "SELECT * FROM public.recurring_rules WHERE user_id = :user_id ORDER BY is_active DESC, start_date DESC", {"user_id": UUID(user["id"])})
+        return [_rule_response(row) for row in rows]
+
+
+@app.post("/api/recurring-rules", status_code=status.HTTP_201_CREATED)
+def create_recurring_rule(payload: RecurringRuleCreate, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        try:
+            row = db.execute(text("""
+                INSERT INTO public.recurring_rules (user_id, name, transaction_type, category, amount, description, frequency, start_date, end_date, goal_id, is_active)
+                VALUES (:user_id, :name, :type, :category, :amount, :description, :frequency, :start_date, :end_date, :goal_id, :active)
+                RETURNING *
+            """), {"user_id": UUID(user["id"]), **payload.model_dump(by_alias=False)}).mappings().one()
+            db.commit()
+            return _rule_response(row)
+        except IntegrityError as exc:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="The recurring rule or linked goal is invalid.") from exc
+
+
+@app.patch("/api/recurring-rules/{rule_id}")
+def update_recurring_rule(rule_id: UUID, payload: RecurringRuleUpdate, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        updates = payload.model_dump(exclude_unset=True, by_alias=False)
+        if "active" in updates:
+            updates["is_active"] = updates.pop("active")
+        if not updates:
+            raise HTTPException(status_code=422, detail="At least one recurring rule field is required.")
+        setters = ", ".join(f"{key if key != 'type' else 'transaction_type'} = :{key}" for key in updates)
+        if "type" in updates:
+            updates["type"] = updates.pop("type")
+        row = db.execute(text(f"UPDATE public.recurring_rules SET {setters}, updated_at = now() WHERE id = :id AND user_id = :user_id RETURNING *"), {**updates, "id": rule_id, "user_id": UUID(user["id"])}).mappings().first()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Recurring rule not found.")
+        db.commit()
+        return _rule_response(row)
+
+
+@app.delete("/api/recurring-rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recurring_rule(rule_id: UUID, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
+        result = db.execute(text("DELETE FROM public.recurring_rules WHERE id = :id AND user_id = :user_id"), {"id": rule_id, "user_id": UUID(user["id"])})
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Recurring rule not found.")
+        db.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _set_occurrence_status(rule_id: UUID, due_date: date, status_value: str, user: dict[str, Any], db: Session) -> dict[str, Any]:
+        rule = _fetch_one(db, "SELECT * FROM public.recurring_rules WHERE id = :id AND user_id = :user_id", {"id": rule_id, "user_id": UUID(user["id"])})
+        if rule is None:
+            raise HTTPException(status_code=404, detail="Recurring rule not found.")
+        row = db.execute(text("""
+            INSERT INTO public.recurring_occurrences (user_id, recurring_rule_id, due_date, status, actual_amount)
+            VALUES (:user_id, :rule_id, :due_date, :status, :amount)
+            ON CONFLICT (recurring_rule_id, due_date) DO UPDATE SET
+              status = excluded.status, actual_amount = excluded.actual_amount, updated_at = now()
+            RETURNING *
+        """), {"user_id": UUID(user["id"]), "rule_id": rule_id, "due_date": due_date, "status": status_value, "amount": rule["amount"]}).mappings().one()
+        db.commit()
+        return {"id": str(row["id"]), "ruleId": str(rule_id), "dueDate": due_date, "status": row["status"], "amount": row["actual_amount"]}
+
+
+@app.post("/api/recurring-rules/{rule_id}/occurrences/{due_date}/post")
+def post_recurring_occurrence(rule_id: UUID, due_date: date, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        return _set_occurrence_status(rule_id, due_date, "posted", user, db)
+
+
+@app.post("/api/recurring-rules/{rule_id}/occurrences/{due_date}/skip")
+def skip_recurring_occurrence(rule_id: UUID, due_date: date, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        return _set_occurrence_status(rule_id, due_date, "skipped", user, db)
+
+
+@app.get("/api/cashflow/forecast")
+def cashflow_forecast(days: int = Query(default=30, ge=30, le=90), user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        start = date.today()
+        end = start + timedelta(days=days)
+        rules = _fetch_all(db, "SELECT * FROM public.recurring_rules WHERE user_id = :user_id AND is_active = true AND start_date <= :end AND (end_date IS NULL OR end_date >= :start)", {"user_id": UUID(user["id"]), "start": start, "end": end})
+        occurrences = []
+        for rule in rules:
+            existing = {row["due_date"]: row for row in _fetch_all(db, "SELECT * FROM public.recurring_occurrences WHERE recurring_rule_id = :id AND user_id = :user_id AND due_date BETWEEN :start AND :end", {"id": rule["id"], "user_id": UUID(user["id"]), "start": start, "end": end})}
+            for due_date in occurrence_dates(max(rule["start_date"], start), rule["end_date"], rule["frequency"], end):
+                saved = existing.get(due_date)
+                occurrences.append({"id": str(saved["id"]) if saved else None, "ruleId": str(rule["id"]), "due_date": due_date, "dueDate": due_date, "status": saved["status"] if saved else "pending", "type": rule["transaction_type"], "amount": saved["actual_amount"] if saved and saved["actual_amount"] is not None else rule["amount"], "name": rule["name"], "category": rule["category"]})
+        balance_row = _fetch_one(db, "SELECT coalesce(sum(amount) filter (where transaction_type = 'deposit'), 0) - coalesce(sum(amount) filter (where transaction_type = 'withdrawal'), 0) AS balance FROM public.savings_transactions WHERE user_id = :user_id", {"user_id": UUID(user["id"])})
+        result = forecast_balance(Decimal(str(balance_row["balance"])), occurrences, start, end)
+        return {"startDate": start, "endDate": end, "days": days, "currentBalance": result["current_balance"], "expectedDeposits": result["expected_deposits"], "expectedWithdrawals": result["expected_withdrawals"], "netCashFlow": result["net_cash_flow"], "projectedBalance": result["projected_balance"], "occurrences": result["occurrences"]}
+
+
+@app.post("/api/cashflow/simulate")
+def simulate_cashflow(payload: CashFlowSimulation, user: dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)) -> dict[str, Any]:
+        forecast = cashflow_forecast(30, user, db)
+        current = Decimal(str(forecast["currentBalance"]))
+        simulated = Decimal(str(forecast["projectedBalance"])) + payload.additional_deposit - payload.purchase_amount
+        return {"currentBalance": current, "originalProjectedBalance": forecast["projectedBalance"], "simulatedProjectedBalance": simulated, "difference": simulated - Decimal(str(forecast["projectedBalance"])), "warning": "The scenario would produce a negative projected balance." if simulated < 0 else None}
+
 
 
 # Transaction routes

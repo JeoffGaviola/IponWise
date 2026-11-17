@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeftRight, BarChart3, Bell, ChevronDown, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings as SettingsIcon, ShieldCheck, Target, Wallet, X } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Bell, ChevronDown, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings as SettingsIcon, ShieldCheck, Target, Wallet, X, CalendarRange } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toast.tsx';
 import { ConfirmDialog, useExitTransition } from './components/Modal.tsx';
 import { GoalModal, GoalMoneyModal, ReminderModal, TransactionModal, WalletModal } from './components/forms.tsx';
@@ -21,6 +21,7 @@ import Reports from './pages/Reports.tsx';
 import Wallets from './pages/Wallets.tsx';
 import Settings from './pages/Settings.tsx';
 import SuperadminPortal from './pages/SuperadminPortal.tsx';
+import BudgetCashFlow from './pages/BudgetCashFlow.tsx';
 import { useAppData } from './hooks/useAppData.ts';
 import { useActions } from './hooks/useActions.ts';
 import { SESSION_EXPIRED_MESSAGE } from './lib/errors.ts';
@@ -34,6 +35,7 @@ const NAV = [
   { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
   { id: 'reminders', label: 'Reminders', icon: Bell },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'budget', label: 'Budget & cash flow', icon: CalendarRange },
   { id: 'wallets', label: 'Wallets & accounts', icon: Wallet },
   { id: 'settings', label: 'Profile & settings', icon: SettingsIcon },
 ];
@@ -223,6 +225,7 @@ function Shell({ session, onReady, onSignOutStart, onSignOutAbort }: { session: 
     transactions: <Transactions key={searchSeed.key} initialSearch={searchSeed.text} getToken={getToken} ledgerVersion={data.ledgerVersion} goals={data.goals} onAuthError={onAuthError} onAdd={(t) => setModal({ type: 'transaction', defaultType: t })} onEdit={(transaction) => setModal({ type: 'transaction', transaction })} onDelete={(record) => setModal({ type: 'confirm', kind: 'transaction', record })} onExport={exportCsv} exporting={exporting} />,
     reminders: <Reminders reminders={data.reminders} notifications={notifications} onNotificationNavigate={go} onEdit={(reminder) => setModal({ type: 'reminder', reminder })} onToggle={actions.setReminderActive} onComplete={actions.setReminderCompleted} onDelete={(record) => setModal({ type: 'confirm', kind: 'reminder', record })} />,
     reports: <Reports report={data.report} error={data.sectionErrors.report} onRetry={() => data.reloadSection('report')} onExport={exportCsv} exporting={exporting} />,
+    budget: <BudgetCashFlow getToken={getToken} />,
     wallets: <Wallets wallets={data.wallets} goalsSaved={data.dashboard?.goals_saved || 0} currency={data.profile?.currency_code || 'PHP'} error={data.sectionErrors.wallets} onRetry={() => data.reloadSection('wallets')} onAdd={() => setModal({ type: 'wallet' })} onScan={() => setModal({ type: 'wallet-scan' })} onAddCard={() => setModal({ type: 'wallet-card' })} onEdit={(wallet) => setModal({ type: 'wallet', wallet })} onDelete={(record) => setModal({ type: 'confirm', kind: 'wallet', record })} onUpdateBalance={(wallet) => setModal({ type: 'wallet-balance', wallet })} onHistory={(wallet) => setModal({ type: 'wallet-history', wallet })} />,
     settings: <Settings profile={data.profile} email={session.user.email} avatarUrl={data.avatarUrl} onSaveProfile={actions.saveProfile} onUploadAvatar={actions.uploadAvatar} onDeleteAvatar={actions.deleteAvatar} onExport={exportCsv} exporting={exporting} onSignOut={signOut} signingOut={signingOut} />,
   }[page];
